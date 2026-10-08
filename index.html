@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Noon Verse">
+<meta name="theme-color" content="#0B1020">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Noon Verse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: a painted nature scene fills the screen; the verse floats on it; glass panels below; tab bar at the bottom */
+:root {
+  --night: #0B1020;                       /* fallback ground behind the scene */
+  --text: #FFFFFF;
+  --text-soft: rgba(255,255,255,.78);
+  --text-faint: rgba(255,255,255,.58);
+  --glass: rgba(16,22,40,.34);
+  --glass-line: rgba(255,255,255,.18);
+  --gold: #F3D59B;
+  --f-arabic: "Amiri", "Geeza Pro", "Traditional Arabic", serif;
+  --f-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --f-body: "Figtree", -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body {
+  background: var(--night); color: var(--text);
+  font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* scene */
+.bg { position: fixed; inset: 0; z-index: 0; }
+.bg .layer { position: absolute; inset: 0; background: #1A2238 center / cover no-repeat; transition: opacity 1.4s ease; }
+.bg .layer.off { opacity: 0; }
+.bg .scrim { position: absolute; inset: 0; background:
+  linear-gradient(180deg, rgba(6,10,24,.5) 0%, rgba(6,10,24,.12) 22%, rgba(6,10,24,.18) 50%, rgba(6,10,24,.62) 100%); }
+
+.app {
+  position: relative; z-index: 1;
+  max-width: 460px; margin: 0 auto; min-height: 100%;
+  padding-inline: 22px; padding-block: 14px 48px;
+  display: flex; flex-direction: column; gap: 26px;
+}
+
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-size: 22px; font-weight: 600; letter-spacing: .01em; }
+.star { width: 20px; height: 20px; position: relative; flex: none; }
+.star::before, .star::after { content: ""; position: absolute; inset: 3px; border: 1.5px solid var(--gold); }
+.star::after { transform: rotate(45deg); }
+.date { font-size: 11.5px; color: var(--text-soft); text-transform: uppercase; letter-spacing: .14em; text-align: right; line-height: 1.6; }
+
+.glass {
+  background: var(--glass); border: 1px solid var(--glass-line); border-radius: 22px;
+  backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+/* notification preview */
+.notif { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 20px; }
+.notif .ico { width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,.92); display: grid; place-items: center; flex: none; }
+.notif .ico .star { width: 18px; height: 18px; }
+.notif .ico .star::before, .notif .ico .star::after { border-color: #1A2340; inset: 2px; }
+.notif .txt { min-width: 0; }
+.notif .row { display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--text-faint); letter-spacing: .04em; }
+.notif b { font-weight: 600; font-size: 13.5px; display: block; }
+.notif p { margin: 0; font-size: 13.5px; color: var(--text-soft); }
+
+.label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .2em; color: var(--text-faint); margin: 0; }
+
+/* verse — no card, it sits on the scene */
+.verse {
+  display: flex; flex-direction: column; gap: 22px; align-items: center; text-align: center;
+  padding-block: 7vh 2vh; transition: opacity .6s ease, transform .6s ease;
+  text-shadow: 0 2px 24px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.3);
+}
+.verse.fade { opacity: 0; transform: translateY(8px); }
+.ar { font-family: var(--f-arabic); direction: rtl; font-size: clamp(30px, 8.6vw, 40px); line-height: 1.85; margin: 0; }
+.en { font-family: var(--f-display); font-size: clamp(25px, 7vw, 32px); line-height: 1.28; font-weight: 500; font-style: italic; margin: 0; text-wrap: balance; }
+.verse.long .en { font-size: clamp(20px, 5.4vw, 24px); }
+.verse.long .ar { font-size: clamp(22px, 6.2vw, 28px); }
+.entry .q { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ref { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--text-soft); letter-spacing: .14em; text-transform: uppercase; }
+.ref .dot { width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); }
+
+.actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn {
+  font: 500 14px var(--f-body); color: var(--text);
+  background: rgba(255,255,255,.14); border: 1px solid var(--glass-line);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-radius: 999px; padding: 11px 18px; cursor: pointer;
+  display: inline-flex; gap: 8px; align-items: center;
+}
+.btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+.btn.primary { background: rgba(255,255,255,.94); color: #18203A; border-color: transparent; font-weight: 600; }
+.btn[aria-pressed="true"] { background: var(--gold); color: #2A2010; border-color: transparent; }
+.btn:focus-visible, .tab:focus-visible, .toggle:focus-visible, .link:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+.why { margin: 4px 0 0; max-width: 34ch; font-size: 15px; line-height: 1.5; color: var(--text-soft); text-wrap: pretty; }
+.why b { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+#back { align-self: center; text-shadow: 0 1px 8px rgba(0,0,0,.5); }
+.scene-name { text-align: center; font-family: var(--f-display); font-style: italic; font-size: 15px; color: var(--text-faint); margin: -8px 0 0; }
+
+.panel { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.panel h2 { font-family: var(--f-display); font-weight: 600; font-size: 24px; line-height: 1.2; margin: 0; }
+.panel p { margin: 0; color: var(--text-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+.chip { font-size: 12px; color: var(--text-soft); border: 1px solid var(--glass-line); border-radius: 999px; padding: 5px 11px; display: inline-flex; align-items: center; gap: 6px; }
+.chip i { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+.sample { font-size: 11.5px; color: var(--text-faint); font-style: italic; }
+.reflect-q { font-family: var(--f-display); font-size: 21px; line-height: 1.3; color: var(--text) !important; }
+.link { background: none; border: 0; color: var(--gold); font: 500 13.5px var(--f-body); cursor: pointer; padding: 0; text-align: left; }
+
+/* journal */
+.screen-title { font-family: var(--f-display); font-weight: 600; font-size: 36px; margin: 8px 0 0; text-shadow: 0 2px 18px rgba(0,0,0,.4); }
+.list { display: flex; flex-direction: column; padding: 4px 18px; }
+.entry { display: grid; grid-template-columns: 48px 1fr; gap: 14px; padding-block: 16px; border-bottom: 1px solid var(--glass-line); }
+.entry:last-child { border-bottom: 0; }
+.day { text-align: center; }
+.day b { display: block; font-family: var(--f-display); font-size: 28px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
+.day span { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .12em; }
+.entry .body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.entry .q { font-family: var(--f-display); font-size: 18.5px; line-height: 1.3; margin: 0; font-style: italic; }
+.entry .meta { font-size: 12.5px; color: var(--text-faint); }
+
+/* settings */
+.group { overflow: hidden; }
+.set { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--glass-line); }
+.set:last-child { border-bottom: 0; }
+.set small { display: block; color: var(--text-faint); font-size: 12.5px; }
+.val { color: var(--gold); font-weight: 500; white-space: nowrap; }
+.toggle { width: 46px; height: 28px; border-radius: 999px; border: 0; background: rgba(255,255,255,.22); position: relative; cursor: pointer; flex: none; }
+.toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.toggle[aria-checked="true"] { background: #6FB08A; }
+.toggle[aria-checked="true"]::after { transform: translateX(18px); }
+
+/* tab bar */
+.tabs {
+  position: fixed; z-index: 2; left: 0; right: 0; bottom: 0;
+  padding: 10px 24px calc(12px + env(safe-area-inset-bottom, 0px));
+  display: flex; justify-content: center; gap: clamp(24px, 12vw, 64px);
+  background: rgba(10,14,28,.42); border-top: 1px solid var(--glass-line);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.tab { background: none; border: 0; font: 500 11px var(--f-body); letter-spacing: .04em; color: var(--text-faint); display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 4px 10px; }
+.tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+.tab[aria-selected="true"] { color: var(--text); }
+
+section { display: flex; flex-direction: column; gap: 22px; }
+#today { flex: 1; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bg .layer, .verse, .toggle::after { transition: none; }
+}
+</style>
+</head>
+<body>
+
+
+<div class="bg" aria-hidden="true"><div class="layer" id="cA"></div><div class="layer off" id="cB"></div><div class="scrim"></div></div>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="star" aria-hidden="true"></span>Noon Verse</div>
+    <div class="date" id="date"></div>
+  </header>
+
+  <!-- TODAY -->
+  <section id="today">
+    <article class="verse fade" id="verse" aria-live="polite">
+      <p class="ar" lang="ar" id="var"></p>
+      <p class="en" id="ven"></p>
+      <div class="ref"><span id="vsurah"></span><span class="dot"></span><span id="vnum"></span></div>
+      <p class="why" id="why" hidden></p>
+    </article>
+
+    <div class="actions">
+      <button class="btn primary" id="shuffle">
+        <svg viewBox="0 0 24 24"><path d="M3 7h3.5c2 0 3.2.9 4.3 2.6l2.4 3.8c1.1 1.7 2.3 2.6 4.3 2.6H21"/><path d="M3 17h3.5c1.3 0 2.3-.4 3.1-1.2M13.4 8.2c.8-.8 1.8-1.2 3.1-1.2H21"/><path d="m18 4 3 3-3 3M18 14l3 3-3 3"/></svg>
+        Shuffle</button>
+      <button class="btn" id="copy">
+        <svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>
+        <span>Copy</span></button>
+    </div>
+    <button class="link" id="back" hidden>Back to today’s verse</button>
+    <p class="scene-name" id="scene"></p>
+  </section>
+</div>
+
+<script>
+/* ---------- verses: full Quran, Yusuf Ali translation (Tanzil.net) ---------- */
+const TODAY = { s: 94, a: 6, ar: "إِنَّ مَعَ ٱلْعُسْرِ يُسْرًا", en: "Verily, with every difficulty there is relief.", name: "Ash-Sharh" };
+let Q = null, POOL = [];
+function verse(s, a) {
+  if (!Q) return s === TODAY.s && a === TODAY.a ? TODAY : null;
+  const r = Q.v[s - 1][a - 1]; return { s, a, ar: r[0], en: r[1], name: Q.names[s - 1] };
+}
+let PICK = null;  // today's verse, chosen by Claude at noon and stored in the page's database
+const quranReady = fetch("quran.json").then(r => r.json()).then(d => {
+  Q = d;
+  d.v.forEach((rows, si) => rows.forEach((r, ai) => { if (r[2]) POOL.push([si + 1, ai + 1]); }));
+}).catch(() => {});
+function localDay(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+async function loadPick() {
+  try {
+    const r = await fetch("today.json?t=" + Date.now(), { cache: "no-store" });
+    return r.ok ? await r.json() : null;
+  } catch (e) { return null; }
+}
+
+/* ---------- photos (Unsplash, free license) ---------- */
+const SCENES = [
+  { src: "photos/1554629947-334ff61d85dc.jpg", name: "Peak at first light", by: "Mads Schmidt Rasmussen" },
+  { src: "photos/1594329852649-012d9528deda.jpg", name: "Sun over the lake", by: "Dave Hoefler" },
+  { src: "photos/1588001832198-c15cff59b078.jpg", name: "Shore at sunset", by: "Storiès" },
+  { src: "photos/1568405336404-1fefdca58699.jpg", name: "Stars over the desert", by: "David Billings" },
+  { src: "photos/1540979388789-6cee28a1cdc9.jpg", name: "Above the clouds", by: "Boris Baldinger" },
+  { src: "photos/1576806817362-9ed6edf33591.jpg", name: "Evening sea", by: "Nong" },
+  { src: "photos/1673475681199-7574a292b688.jpg", name: "Morning mist", by: "Valeriia Neganova" },
+  { src: "photos/1698781724966-9f69445fa76b.jpg", name: "The Milky Way", by: "Sies Kranen" },
+  { src: "photos/1559567899-035aa0a60475.jpg", name: "Waterfall in the forest", by: "Thomas Despeyroux" },
+  { src: "photos/1629659343117-237c364e69ed.jpg", name: "Dunes at dusk", by: "Linus Mimietz" },
+  { src: "photos/1508977308995-30ac904a63e3.jpg", name: "Sun over the ranges", by: "Calvin Weibel" },
+  { src: "photos/1536259199821-24af7564fe9b.jpg", name: "Light through the clouds", by: "Pawel Czerwinski" },
+  { src: "photos/1506624682682-13fa0130f321.jpg", name: "Clouds at golden hour", by: "Sawyer Bengtson" }
+];
+
+/* ---------- state ---------- */
+const cA = document.getElementById("cA"), cB = document.getElementById("cB");
+let front = cA, back = cB, sIdx = 0;
+const $ = id => document.getElementById(id);
+
+let cur = TODAY;
+function showVerse(v) {
+  cur = v;
+  $("var").textContent = v.ar; $("ven").textContent = "“" + v.en.replace(/^"|"$/g, "") + "”";
+  $("vsurah").textContent = v.name; $("vnum").textContent = v.s + " : " + v.a;
+  $("verse").classList.toggle("long", v.en.length > 140);
+  const isPick = PICK && v.s === PICK.surah && v.a === PICK.ayah;
+  $("why").hidden = !isPick;
+  if (isPick) { $("why").innerHTML = "<b></b>"; $("why").firstChild.textContent = PICK.label; $("why").append(PICK.why || ""); }
+  $("back").hidden = !PICK || isPick;
+}
+function paint(el, s) { el.style.backgroundImage = `url("${s.src}")`; }
+function setScene(i, instant) {
+  sIdx = i; $("scene").textContent = SCENES[i].name + " · photo by " + SCENES[i].by;
+  if (instant) { paint(front, SCENES[i]); return; }
+  const img = new Image();
+  img.onload = img.onerror = () => {
+    paint(back, SCENES[i]);
+    back.classList.remove("off"); front.classList.add("off");
+    [front, back] = [back, front];
+  };
+  img.src = SCENES[i].src;
+}
+function pickOther(n, cur) { let k; do { k = Math.floor(Math.random() * n); } while (k === cur && n > 1); return k; }
+
+function go(v, si) {
+  const el = $("verse"); el.classList.add("fade");
+  setScene(si);
+  setTimeout(() => { showVerse(v); el.classList.remove("fade"); }, 450);
+}
+function randomVerse() {
+  if (!POOL.length) return TODAY;
+  let p; do { p = POOL[Math.floor(Math.random() * POOL.length)]; } while (p[0] === cur.s && p[1] === cur.a);
+  return verse(p[0], p[1]);
+}
+
+$("shuffle").addEventListener("click", () => go(randomVerse(), pickOther(SCENES.length, sIdx)));
+
+$("copy").addEventListener("click", e => {
+  const b = e.currentTarget, v = cur;
+  const text = `“${v.en.replace(/^"|"$/g, "")}” (Qur'an ${v.s}:${v.a})`;
+  const done = () => { b.querySelector("span").textContent = "Copied"; setTimeout(() => b.querySelector("span").textContent = "Copy", 1500); };
+  try { navigator.clipboard.writeText(text).then(done, done); } catch (err) { done(); }
+});
+
+
+
+setScene(0, true);
+Promise.all([quranReady, Promise.race([loadPick(), new Promise(r => setTimeout(() => r(null), 5000))])]).then(([, p]) => {
+  if (p && Q && Q.v[p.surah - 1] && Q.v[p.surah - 1][p.ayah - 1]) {
+    const today = p.date === localDay(new Date());
+    PICK = { surah: p.surah, ayah: p.ayah, why: p.why, label: today ? "Why today" : "Picked " + new Date(p.date + "T12:00").toLocaleDateString(undefined, { weekday: "long" }) };
+    showVerse(verse(p.surah, p.ayah));
+  } else showVerse(randomVerse());
+  $("verse").classList.remove("fade");
+});
+$("back").addEventListener("click", () => go(verse(PICK.surah, PICK.ayah), pickOther(SCENES.length, sIdx)));
+const now = new Date();
+$("date").innerHTML = now.toLocaleDateString(undefined, { weekday: "long" }) + "<br>" + now.toLocaleDateString(undefined, { day: "numeric", month: "long" });
+if (document.fonts) document.fonts.ready.then(() => {});
+</script>
+
+</body>
+</html>
